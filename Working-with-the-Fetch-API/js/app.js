@@ -11,14 +11,34 @@ function fetchData(url) {
         .then(res => res.json())//takes the response from fetch, puts it into a function and parses the json data into javascript with .json()
         .catch(error => console.log('Looks like ther was a problem', error))
 }
-fetchData('https://dog.ceo/api/breeds/list')
-    .then(data => generateOptions(data.message))
+Promise.all([
+    fetchData('https://dog.ceo/api/breeds/list'),
+    fetchData('https://dog.ceo/api/breeds/image/random')
+])
+    .then(data => {
+        const breedList = data[0].message;
+        const randomImage = data[1].message;
 
+        generateOptions(breedList);
+        generateImage(randomImage);
+    })
+//another way
+//     // store urls to fetch in an array
+// const urls = [
+//     'https://dog.ceo/api/breeds/list',
+//     'https://dog.ceo/api/breeds/image/random'
+//   ];
 
-fetchData('https://dog.ceo/api/breeds/image/random')
-    .then(data => generateImage(data.message))
-
-
+//   // use map() to perform a fetch and handle the response for each url
+//   Promise.all(urls.map(url =>
+//     fetch(url)
+//       .then(checkStatus)                 
+//       .then(parseJSON)
+//       .catch(logError)
+//   ))
+//   .then(data => {
+//     // do something with the data
+//   })
 
 // ------------------------------------------
 //  HELPER FUNCTIONS
@@ -66,9 +86,27 @@ function fetchBreedImage() {
 // ------------------------------------------
 select.addEventListener('change', fetchBreedImage);
 card.addEventListener('click', fetchBreedImage);
-
+form.addEventListener('submit', postData);
 
 // ------------------------------------------
 //  POST DATA
 // ------------------------------------------
 
+function postData(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const comment = document.getElementById('comment').value;
+
+    const config = {
+        method: "POST",//indicates the type of request
+        headers: {
+            'Content-Type': 'application/json' //headers usually contained within an object, 'Content-Type': 'application/json' communicates to the server that the data has been encoded with JSON.
+        },
+        body: JSON.stringify({ name: name, comment: comment }) //this is where the values are sent to the server, the form data is transformed into a JSON string
+    }
+
+    fetch('https://jsonplaceholder.typicode.com/comments', config)//fake online rest API for testing and prototyping
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(data => console.log(data));
+}
